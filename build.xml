@@ -34,7 +34,7 @@
 
 	<!-- Compiles this project's .java files into .class files. -->
 	<!-- copied from android_rules.xml to override the encoding -->
-	<target name="compile" depends="init, -resource-src, -aidl" description="Compiles project's .java files into .class files">
+	<target name="compile" depends="init" description="Compiles project's .java files into .class files">
 		<!-- If android rules are used for a test project, its classpath should include
              tested project's location -->
 		<condition property="extensible.classpath" value="${tested.project.absolute.dir}/bin/classes" else=".">
@@ -96,7 +96,7 @@
         </findbugs>
     </target>
 
-    <!-- <target name="javadoc" depends="compile" description="--> builds javadoc">
+    <target name="javadoc" depends="compile" description="builds javadoc">
         <mkdir dir="javadoc" />
         <javadoc destdir="javadoc" author="false" version="false">
             <packageset dir="src" defaultexcludes="yes">
@@ -105,7 +105,7 @@
             <doctitle>
                 <![CDATA[<h1>RadioFM</h1>]]></doctitle>
         </javadoc>
-    </target> -->
+    </target>
 
 
 </project>
