@@ -1,2 +1,6 @@
 <?xml version="1.0"?>
-<project name="android-screenshot-library"/>
+<project name="android-screenshot-library" default="build">
+	<target name="build"/>
+	<target name="analysis"/>
+	<target name="javadoc"/>
+</project>
