@@ -266,6 +266,7 @@ static int Write(int fd, char* buf, int c)
 }
 
 
+#if 0
 static int Write_RAW(struct picture* pict, char* filename)
 {
   int fd = open(filename, O_CREAT | O_WRONLY | O_SYNC, 0777);
@@ -295,6 +296,7 @@ static int Write_RAW(struct picture* pict, char* filename)
 
   return 0;
 }
+#endif
 
 
 static char optstring[] = "hiC:c:d:s:";
@@ -312,5 +314,5 @@ static struct option long_options[] = {
 int TakeScreenshot (char* device, struct picture* pict)
 {
 	int vt_num = -1;
-	return read_fb(device, vt_num, &pict);
+	return read_fb(device, vt_num, pict);
 }
