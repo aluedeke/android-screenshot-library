@@ -4,7 +4,8 @@
       android:versionCode="1"
       android:versionName="1.0">
     <application android:icon="@drawable/icon" android:label="@string/app_name">
-		<service android:name="ASLService" android:label="Service launching the native screenshot application">
+		<service android:name="ScreenshotService" android:label="Service for accessing the Android Screenshot Library API"
+		android:enabled="true" android:exported="true">
 		</service>
     </application>
 
