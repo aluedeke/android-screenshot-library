@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="hello">Hello World, ASL!</string>
-    <string name="app_name"></string>
+    <string name="app_name">asl-native-launcher</string>
 </resources>
