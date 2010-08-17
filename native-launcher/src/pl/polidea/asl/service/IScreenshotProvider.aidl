@@ -1,6 +1,6 @@
 // AIDL file specifying interface used by clients to retrieve screenshots
 
-package pl.polidea.asl;
+package pl.polidea.asl.service;
 
 
 // Interface for fetching screenshots

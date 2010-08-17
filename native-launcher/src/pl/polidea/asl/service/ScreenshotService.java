@@ -1,4 +1,4 @@
-package pl.polidea.asl;
+package pl.polidea.asl.service;
 
 import java.io.*;
 import java.net.*;
@@ -13,13 +13,19 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.os.*;
+import android.util.Log;
 
 public class ScreenshotService extends Service {
+	
+	/*
+	 * Action name for intent used to bind to service.
+	 */
+	public static final String BIND = "pl.polidea.asl.service.ScreenshotService.BIND";  
 
 	/*
 	 * Name of the native process.
 	 */
-	private static final String NATIVE_PROCESS_NAME = "asl-native";
+	private static final String NATIVE_PROCESS_NAME = "asl-native"; 
 
 	/*
 	 * Port number used to communicate with native process.
@@ -29,7 +35,7 @@ public class ScreenshotService extends Service {
 	/*
 	 * Timeout allowed in communication with native process.
 	 */
-	private static final int TIMEOUT = 1000;
+	private static final int TIMEOUT = 1000;  
 
 	/*
 	 * Directory where screenshots are being saved.
@@ -55,6 +61,11 @@ public class ScreenshotService extends Service {
 			return isNativeRunning();
 		}
 	};
+	
+	@Override
+	public void onCreate() {
+		Log.i("service", "Service created."); 
+	}
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -79,12 +90,29 @@ public class ScreenshotService extends Service {
 		}
 		return false;
 	}
+	
+	
+	/*
+	 * Internal class describing a screenshot.
+	 */
+	class Screenshot {
+		public byte[][] pixels;
+		public int width;
+		public int height;
+		public int bpp;
+		
+		public boolean isValid() {
+			if (pixels == null || pixels.length == 0 || pixels[0] == null || pixels[0].length == 0) return false;
+			if (width <= 0 || height <= 0)	return false;
+			return true;
+		}
+	}
 
 	/*
 	 * Communicates with the native service and retrieves a screenshot from it
 	 * as a 2D array of bytes.
 	 */
-	private byte[][] retreiveRawScreenshot() throws IOException {
+	private Screenshot retreiveRawScreenshot() throws Exception {
 		try {
 			// connect to native application
 			Socket s = new Socket();
@@ -106,22 +134,26 @@ public class ScreenshotService extends Service {
 			// parse it
 			String[] screenData = sb.toString().split(" ");
 			if (screenData.length >= 3) {
-				int width, height, bpp;
-				width = Integer.parseInt(screenData[0]);
-				height = Integer.parseInt(screenData[1]);
-				bpp = Integer.parseInt(screenData[2]);
+				Screenshot ss = new Screenshot();
+				ss.width = Integer.parseInt(screenData[0]);
+				ss.height = Integer.parseInt(screenData[1]);
+				ss.bpp = Integer.parseInt(screenData[2]);
 
 				// retreive the screenshot (as an array of rows -- [y][x])
-				byte[][] screen = new byte[height][];
-				int bytesPerRow = width * bpp / 4;
-				for (int y = 0; y < height; ++y) {
+				System.gc();
+				ss.pixels = new byte[ss.height][];
+				int bytesPerRow = ss.width * ss.bpp / 4;
+				for (int y = 0; y < ss.height; ++y) {
 					// get the row
-					screen[y] = new byte[bytesPerRow];
-					is.read(screen[y]);
+					ss.pixels[y] = new byte[bytesPerRow];
+					is.read(ss.pixels[y]);
 				}
 
-				return screen;
+				return ss;
 			}
+		}
+		catch (Exception e) {
+			throw new Exception(e);
 		}
 		finally {}
 
@@ -131,27 +163,24 @@ public class ScreenshotService extends Service {
 	/*
 	 * Saves given array of bytes into image file in the PNG format.
 	 */
-	private void writeImageFile(byte[][] bytes, String file) {
-		if (bytes == null || bytes.length == 0 || bytes[0] == null || bytes[0].length == 0)
-			throw new IllegalArgumentException();
+	private void writeImageFile(Screenshot ss, String file) {
+		if (ss == null || !ss.isValid())		throw new IllegalArgumentException();
 		if (file == null || file.length() == 0)	throw new IllegalArgumentException();
 
 		// create appropriate bitmap
-		int width = bytes[0].length;
-		int height = bytes.length;
-		Bitmap bmp = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+		Bitmap bmp = Bitmap.createBitmap(ss.width, ss.height, Config.ARGB_8888);
 
 		// fill it with given data
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
+		for (int y = 0; y < ss.height; ++y) {
+			for (int x = 0; x < ss.width; ++x) {
 				// (this assumes 32-bit ARGB -- has to be checked experimentally)
 				// (WARNING: bitwise operation in Java -- be very very careful about sign propagation;
 				// zero bits with 0 whenever feasible)
 				int color = 0;
-				color |= ((bytes[y][4*x] & 0x000000FF) << 24) & 0xFF000000;		// A
-				color |= ((bytes[y][4*x+1] & 0x000000FF) << 16) & 0x00FF0000;	// R
-				color |= ((bytes[y][4*x+2] & 0x000000FF) << 8) & 0x0000FF00;	// G
-				color |= (bytes[y][4*x+3] & 0x000000FF) & 0x000000FF;			// B
+				color |= ((ss.pixels[y][4*x] & 0x000000FF) << 24) & 0xFF000000;		// A
+				color |= ((ss.pixels[y][4*x+1] & 0x000000FF) << 16) & 0x00FF0000;	// R
+				color |= ((ss.pixels[y][4*x+2] & 0x000000FF) << 8) & 0x0000FF00;	// G
+				color |= (ss.pixels[y][4*x+3] & 0x000000FF) & 0x000000FF;			// B
 				bmp.setPixel(y, x, color);
 			}
 		}
@@ -178,8 +207,14 @@ public class ScreenshotService extends Service {
 		String file = sb.toString();
 
 		// fetch the screen and save it
-		byte[][] bytes = retreiveRawScreenshot();
-		writeImageFile(bytes, file);
+		Screenshot ss = null;
+		try {
+			ss = retreiveRawScreenshot();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		writeImageFile(ss, file);
 
 		return file;
 	}

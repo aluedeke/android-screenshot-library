@@ -1,5 +1,6 @@
-package pl.polidea.asl;
+package pl.polidea.asl.demo;
 
+import pl.polidea.asl.service.*;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -33,24 +34,27 @@ public class ScreenshotDemo extends Activity {
 
 
     /** Called when the activity is first created. */
-    @Override
+    @Override 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
 
         imgScreen = (ImageView)findViewById(R.id.imgScreen);
-        Button btn = (Button)findViewById(R.id.btnTakeScreenshot);
-        btn.setOnClickListener(btnTakeScreenshot_onClick);
+        Button btn = (Button)findViewById(R.id.btnTakeScreenshot); 
+        btn.setOnClickListener(btnTakeScreenshot_onClick); 
 
         // connect to ASL service
-        String className = IScreenshotProvider.class.getName();
-        bindService (new Intent(className), aslServiceConn, Context.BIND_AUTO_CREATE);
+        //Intent intent = new Intent(ScreenshotService.class.getName());
+        Intent intent = new Intent(ScreenshotService.BIND);
+        //intent.addCategory(Intent.ACTION_DEFAULT);
+        bindService (intent, aslServiceConn, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onDestroy() {
     	unbindService(aslServiceConn);
+    	super.onDestroy();
     }
 
 
