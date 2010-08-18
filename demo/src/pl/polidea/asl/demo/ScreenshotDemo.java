@@ -9,6 +9,7 @@ import android.content.ServiceConnection;
 import android.os.*;
 import android.view.*;
 import android.widget.*;
+import android.graphics.*;
 
 public class ScreenshotDemo extends Activity {
 
@@ -73,6 +74,12 @@ public class ScreenshotDemo extends Activity {
 				}
 				if (file == null)
 					Toast.makeText(ScreenshotDemo.this, R.string.screenshot_error, Toast.LENGTH_SHORT).show();
+				else {
+					Toast.makeText(ScreenshotDemo.this, R.string.screenshot_ok, Toast.LENGTH_SHORT).show();
+					Bitmap screen = BitmapFactory.decodeFile(file);
+					imgScreen.setImageBitmap(screen);
+					
+				}
 			}
 
 		}

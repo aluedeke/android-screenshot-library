@@ -40,7 +40,7 @@ public class ScreenshotService extends Service {
 	/*
 	 * Directory where screenshots are being saved.
 	 */
-	private static String SCREENSHOT_FOLDER = "/data/local/";
+	private static String SCREENSHOT_FOLDER = "/sdcard/screens/";
 
 
 	/*
@@ -96,16 +96,31 @@ public class ScreenshotService extends Service {
 	 * Internal class describing a screenshot.
 	 */
 	class Screenshot {
-		public byte[][] pixels;
+		public int[] pixels;
 		public int width;
 		public int height;
 		public int bpp;
 		
 		public boolean isValid() {
-			if (pixels == null || pixels.length == 0 || pixels[0] == null || pixels[0].length == 0) return false;
+			if (pixels == null || pixels.length == 0) return false;
 			if (width <= 0 || height <= 0)	return false;
 			return true;
 		}
+	}
+	
+	
+	private int convertRGBAtoARGB(int c) {
+		int r = ((c & 0xFF000000) >> 24) & 0x000000FF;
+		int g = ((c & 0x00FF0000) >> 16) & 0x000000FF;
+		int b = ((c & 0x0000FF00) >> 8) & 0x000000FF;
+		int a = c & 0x000000FF;
+		
+		c = 0;
+		c |= ((a << 24) & 0xFF000000);
+		c |= ((r << 16) & 0x00FF0000);
+		c |= ((g << 8) & 0x0000FF00);
+		c |= (b & 0x00000FF);
+		return c;
 	}
 
 	/*
@@ -139,16 +154,16 @@ public class ScreenshotService extends Service {
 				ss.height = Integer.parseInt(screenData[1]);
 				ss.bpp = Integer.parseInt(screenData[2]);
 
-				// retreive the screenshot (as an array of rows -- [y][x])
-				System.gc();
-				ss.pixels = new byte[ss.height][];
-				int bytesPerRow = ss.width * ss.bpp / 4;
-				for (int y = 0; y < ss.height; ++y) {
-					// get the row
-					ss.pixels[y] = new byte[bytesPerRow];
-					is.read(ss.pixels[y]);
-				}
-
+				// retreive the screenshot
+				DataInputStream dis = new DataInputStream(is);
+				ss.pixels = new int [ss.width * ss.height];
+				for (int y = 0; y < ss.height; ++y)
+					for (int x = 0; x < ss.width; ++x) {
+						c = dis.readInt();
+						c = convertRGBAtoARGB(c);
+						ss.pixels[y * ss.width + x] = c;
+					}
+				
 				return ss;
 			}
 		}
@@ -167,23 +182,29 @@ public class ScreenshotService extends Service {
 		if (ss == null || !ss.isValid())		throw new IllegalArgumentException();
 		if (file == null || file.length() == 0)	throw new IllegalArgumentException();
 
-		// create appropriate bitmap
+		// create appropriate bitmap and fill it wit data
 		Bitmap bmp = Bitmap.createBitmap(ss.width, ss.height, Config.ARGB_8888);
+		bmp.setPixels(ss.pixels, 0, ss.width, 0, 0, ss.width, ss.height);
 
-		// fill it with given data
-		for (int y = 0; y < ss.height; ++y) {
-			for (int x = 0; x < ss.width; ++x) {
-				// (this assumes 32-bit ARGB -- has to be checked experimentally)
-				// (WARNING: bitwise operation in Java -- be very very careful about sign propagation;
-				// zero bits with 0 whenever feasible)
-				int color = 0;
-				color |= ((ss.pixels[y][4*x] & 0x000000FF) << 24) & 0xFF000000;		// A
-				color |= ((ss.pixels[y][4*x+1] & 0x000000FF) << 16) & 0x00FF0000;	// R
-				color |= ((ss.pixels[y][4*x+2] & 0x000000FF) << 8) & 0x0000FF00;	// G
-				color |= (ss.pixels[y][4*x+3] & 0x000000FF) & 0x000000FF;			// B
-				bmp.setPixel(y, x, color);
-			}
-		}
+//		// fill it with given data
+//		try {
+//			for (int y = 0; y < ss.height; ++y) {
+//				for (int x = 0; x < ss.width; ++x) {
+//					// (this assumes 32-bit ARGB -- has to be checked experimentally)
+//					// (WARNING: bitwise operation in Java -- be very very careful about sign propagation;
+//					// zero bits with 0 whenever feasible)
+//					int color = 0;
+//					color |= ((ss.pixels[y][4*x] & 0x000000FF) << 24) & 0xFF000000;		// A
+//					color |= ((ss.pixels[y][4*x+1] & 0x000000FF) << 16) & 0x00FF0000;	// R
+//					color |= ((ss.pixels[y][4*x+2] & 0x000000FF) << 8) & 0x0000FF00;	// G
+//					color |= (ss.pixels[y][4*x+3] & 0x000000FF) & 0x000000FF;			// B
+//					bmp.setPixel(x, y, color);
+//				}
+//			}
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		// save it in PNG format
 		FileOutputStream fos;
@@ -202,7 +223,7 @@ public class ScreenshotService extends Service {
 		// construct screenshot file name
 		StringBuilder sb = new StringBuilder();
 		sb.append(SCREENSHOT_FOLDER);
-		sb.append(UUID.randomUUID().hashCode());	// hash code of UUID should be quite random yet short
+		sb.append(Math.abs(UUID.randomUUID().hashCode()));	// hash code of UUID should be quite random yet short
 		sb.append(".png");
 		String file = sb.toString();
 
