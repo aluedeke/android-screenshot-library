@@ -206,6 +206,7 @@ public class ScreenshotService extends Service {
 //			e.printStackTrace();
 //		}
 
+
 		// save it in PNG format
 		FileOutputStream fos;
 		try {
@@ -213,7 +214,7 @@ public class ScreenshotService extends Service {
 		} catch (FileNotFoundException e) {
 			throw new InvalidParameterException();
 		}
-		bmp.compress(CompressFormat.PNG, 90, fos);
+		bmp.compress(CompressFormat.PNG, 100, fos);
 	}
 
 	/*

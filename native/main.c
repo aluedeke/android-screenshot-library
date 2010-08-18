@@ -55,7 +55,7 @@ ssize_t Receive(int sfd, char* buf, size_t count, int flags)
 	return len;
 }
 
-ssize_t Send(int sfd, const char* buf, size_t count, int flags)
+ssize_t Send(int sfd, const char* buf, ssize_t count, int flags)
 {
 	int c;
 	size_t len = 0;
@@ -68,6 +68,12 @@ ssize_t Send(int sfd, const char* buf, size_t count, int flags)
 		buf += c;
 		len += c;
 		count -= c;
+
+//#ifdef DEBUG
+//		char msg[BUF_SIZE];
+//		snprintf (msg, BUF_SIZE, "-- Sent %d bytes (%d total, %d remaining)", c, len, count);
+//		Log (msg);
+//#endif
 	} while (count > 0);
 
 	return len;
@@ -125,7 +131,7 @@ int accept_client(int servfd, int** client_fd, int* client_count)
 	Log ("- Connection accepted");
 
 	*client_fd = (int*)realloc(*client_fd, sizeof(int) * (*client_count + 1));
-	*client_fd[(*client_count)++] = cfd;
+	(*client_fd)[(*client_count)++] = cfd;	// (*client_fd)[...] != *client_fd[...] -- f'kin precedence ;/
 
 	return cfd;
 }
@@ -159,7 +165,7 @@ int handle_client_input(int cfd, char* fddev)
 		Log ("- Response header sent.");
 
 		/* content */
-		if (Send(cfd, pict.buffer, pict.xres * pict.yres * pict.bps / 4, 0) < 0)
+		if (Send(cfd, pict.buffer, pict.xres * pict.yres * pict.bps / 8, 0) < 0)
 			return -1;
 		Log ("- Screenshot sent");
 	}
@@ -223,7 +229,7 @@ int do_work(int servfd, char* fbDevice)
 				
 				/* connection finished */
 				close (client_fd[i]);
-				client_fd[i] = 0;
+				client_fd[i] = -1;	// no socket
 			}
 		}
 
