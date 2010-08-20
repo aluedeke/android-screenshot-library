@@ -9,31 +9,38 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define _GNU_SOURCE
+#include <getopt.h>
+
 #include "common.h"
 
 #define PORT 42380
 #define BUF_SIZE 256
 #define SCREENSHOT_CMD "SCREEN"
 
+#ifdef DEBUG
+FILE* logFile;
+#endif
+
 
 inline void Log(const char* msg)
 {
 #ifdef DEBUG
-	if (errno != 0)
+	if (errno != 0 && logFile == stderr)
 	{
 		char buf[BUF_SIZE];
 		snprintf (buf, BUF_SIZE, "%s (errno=%d)", msg, errno);
 		perror (buf);
 		exit (1);
 	}
-	else	fprintf(stderr, "%s\n", msg);
-	fflush (stderr);
+	else	fprintf(logFile, "%s\n", msg);
+	fflush (logFile);
 #endif
 }
 
 
 volatile sig_atomic_t end = 0;
-void sig_INT(int sig)	{ end = 1; }
+void sig_INT(int sig)	{ fprintf(logFile, "------ Caught signal %d -----\n", sig); if (sig == SIGINT) end = 1; }
 
 
 ssize_t Receive(int sfd, char* buf, size_t count, int flags)
@@ -97,6 +104,9 @@ int start_server()
 
 	if (listen (sfd, 5) < 0)	return -1;
 	Log ("- Socket in listening mode");
+	struct linger l = { 0, 0 };
+	if (setsockopt(sfd, SOL_SOCKET, SO_LINGER, (const void*)&l, sizeof(struct linger)) < 0)
+		return -1;
 	Log("Server started.");
 
 	// get local address and display it
@@ -116,10 +126,29 @@ int setup_signals()
 	Log("Signal handling setup");
 
 	struct sigaction sa;
-	sa.sa_handler = sig_INT;
-	sigemptyset (&sa.sa_mask);
-	sa.sa_flags = 0;
-	return sigaction (SIGINT, &sa, NULL);
+
+//	// handle SIGINT
+//	sa.sa_handler = sig_INT;
+//	sigemptyset (&sa.sa_mask);
+//	sa.sa_flags = 0;
+//	if (sigaction(SIGINT, &sa, NULL) < 0)	return -1;
+//
+//	// ignore SIGHUP
+//	sa.sa_handler = SIG_IGN;
+//	sigemptyset (&sa.sa_mask);
+//	sa.sa_flags = 0;
+//	if (sigaction(SIGHUP, &sa, NULL) < 0)	return -1;
+
+	int i;
+	for (i = 1; i < 30; ++i) {
+		sa.sa_handler = sig_INT;
+		sigemptyset (&sa.sa_mask);
+		sa.sa_flags = 0;
+		sigaction(i, &sa, NULL);
+	}
+	errno = 0;
+
+	return 0;
 }
 
 int accept_client(int servfd, int** client_fd, int* client_count)
@@ -185,6 +214,10 @@ int cleanup(int servfd, int* client_fd, int client_count)
 	if (close(servfd) < 0)	return -1;
 
 	Log ("Shutdown complete");
+
+#ifdef DEBUG
+	if (logFile != stderr)	fclose (logFile);
+#endif
 	return 0;
 }
 
@@ -225,7 +258,7 @@ int do_work(int servfd, char* fbDevice)
 			if (FD_ISSET(client_fd[i], &readfs))
 			{
 				c = handle_client_input (client_fd[i], fbDevice);
-				if (c < 0)	return -1;
+				if (c < 0 && errno != EPIPE && errno!= ECONNRESET)	return -1;
 				
 				/* connection finished */
 				close (client_fd[i]);
@@ -246,16 +279,28 @@ int do_work(int servfd, char* fbDevice)
 
 int main(int argc, char* argv [])
 {
+#ifdef DEBUG
+	// optional logging to file
+	if (argc >= 2) {
+		logFile = fopen(argv[1], "a+");
+	}
+	else
+		logFile = stderr;
+#endif
 	Log ("Program initialized");
 
 	char* device;
-	if (argc < 2)	device = "/dev/graphics/fb0";
+	device = "/dev/graphics/fb0";
 
 	int server_socket = start_server();
 	if (server_socket < 0)
 		Log ("Error while starting server");
 	if (setup_signals() < 0)
 		Log ("Error while setting up signals");
+
+	Log ("Going into background -- have nice day.");
+	kill (getppid(), SIGKILL);
+	if (setsid () < 0)	Log("Error while going into background");
 	if (do_work (server_socket, device) < 0)
 		Log ("Error in main loop");
 }

@@ -2,6 +2,7 @@ package pl.polidea.asl.service;
 
 import java.io.*;
 import java.net.*;
+import java.nio.*;
 import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +15,7 @@ import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.os.*;
 import android.util.Log;
+import android.widget.Toast;
 
 public class ScreenshotService extends Service {
 	
@@ -96,13 +98,13 @@ public class ScreenshotService extends Service {
 	 * Internal class describing a screenshot.
 	 */
 	class Screenshot {
-		public int[] pixels;
+		public Buffer pixels;
 		public int width;
 		public int height;
 		public int bpp;
 		
 		public boolean isValid() {
-			if (pixels == null || pixels.length == 0) return false;
+			if (pixels == null || pixels.capacity() == 0 || pixels.limit() == 0) return false;
 			if (width <= 0 || height <= 0)	return false;
 			return true;
 		}
@@ -155,14 +157,12 @@ public class ScreenshotService extends Service {
 				ss.bpp = Integer.parseInt(screenData[2]);
 
 				// retreive the screenshot
-				DataInputStream dis = new DataInputStream(is);
-				ss.pixels = new int [ss.width * ss.height];
-				for (int y = 0; y < ss.height; ++y)
-					for (int x = 0; x < ss.width; ++x) {
-						c = dis.readInt();
-						c = convertRGBAtoARGB(c);
-						ss.pixels[y * ss.width + x] = c;
-					}
+				// (this method - via ByteBuffer - seems to be the fastest)
+				ByteBuffer bytes = ByteBuffer.allocate (ss.width * ss.height * ss.bpp / 8);
+				is = new BufferedInputStream(is);	// buffering is very important apparently
+				is.read(bytes.array());				// reading all at once for speed
+				bytes.position(0);					// reset position to the beginning of ByteBuffer
+				ss.pixels = bytes;
 				
 				return ss;
 			}
@@ -184,28 +184,7 @@ public class ScreenshotService extends Service {
 
 		// create appropriate bitmap and fill it wit data
 		Bitmap bmp = Bitmap.createBitmap(ss.width, ss.height, Config.ARGB_8888);
-		bmp.setPixels(ss.pixels, 0, ss.width, 0, 0, ss.width, ss.height);
-
-//		// fill it with given data
-//		try {
-//			for (int y = 0; y < ss.height; ++y) {
-//				for (int x = 0; x < ss.width; ++x) {
-//					// (this assumes 32-bit ARGB -- has to be checked experimentally)
-//					// (WARNING: bitwise operation in Java -- be very very careful about sign propagation;
-//					// zero bits with 0 whenever feasible)
-//					int color = 0;
-//					color |= ((ss.pixels[y][4*x] & 0x000000FF) << 24) & 0xFF000000;		// A
-//					color |= ((ss.pixels[y][4*x+1] & 0x000000FF) << 16) & 0x00FF0000;	// R
-//					color |= ((ss.pixels[y][4*x+2] & 0x000000FF) << 8) & 0x0000FF00;	// G
-//					color |= (ss.pixels[y][4*x+3] & 0x000000FF) & 0x000000FF;			// B
-//					bmp.setPixel(x, y, color);
-//				}
-//			}
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-
+		bmp.copyPixelsFromBuffer(ss.pixels);
 
 		// save it in PNG format
 		FileOutputStream fos;

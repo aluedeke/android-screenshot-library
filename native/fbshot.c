@@ -166,21 +166,21 @@ int read_fb(char *device, int vt_num, struct picture *pict){
   if(!(pict->buffer=malloc(pict->xres*pict->yres*i)))
     FatalError("couldnt malloc");
 
-  fprintf(stdout, "Framebuffer %s is %i bytes.\n", device,
-                    (fb_varinfo.xres * fb_varinfo.yres * i));
-  fprintf(stdout, "Grabbing %ix%i ... \n", fb_varinfo.xres, fb_varinfo.yres);
+//  fprintf(stdout, "Framebuffer %s is %i bytes.\n", device,
+//                    (fb_varinfo.xres * fb_varinfo.yres * i));
+//  fprintf(stdout, "Grabbing %ix%i ... \n", fb_varinfo.xres, fb_varinfo.yres);
 
-#ifdef DEBUG
-/* Output some more information bout actual graphics mode
- */
-  fprintf(stdout, "%ix%i [%i,%i] %ibps %igr\n",
-  	fb_varinfo.xres_virtual, fb_varinfo.yres_virtual,
-  	fb_varinfo.xoffset, fb_varinfo.yoffset,
-  	fb_varinfo.bits_per_pixel, fb_varinfo.grayscale);
-  fprintf(stdout, "FIX: card:%s mem:0x%.8X mem_len:%d visual:%i type:%i type_aux:%i line_len:%i accel:%i\n",
-  fb_fixinfo.id,fb_fixinfo.smem_start,fb_fixinfo.smem_len,fb_fixinfo.visual,
-  fb_fixinfo.type,fb_fixinfo.type_aux,fb_fixinfo.line_length,fb_fixinfo.accel);
-#endif
+//#ifdef DEBUG
+///* Output some more information bout actual graphics mode
+// */
+//  fprintf(stdout, "%ix%i [%i,%i] %ibps %igr\n",
+//  	fb_varinfo.xres_virtual, fb_varinfo.yres_virtual,
+//  	fb_varinfo.xoffset, fb_varinfo.yoffset,
+//  	fb_varinfo.bits_per_pixel, fb_varinfo.grayscale);
+//  fprintf(stdout, "FIX: card:%s mem:0x%.8X mem_len:%d visual:%i type:%i type_aux:%i line_len:%i accel:%i\n",
+//  fb_fixinfo.id,fb_fixinfo.smem_start,fb_fixinfo.smem_len,fb_fixinfo.visual,
+//  fb_fixinfo.type,fb_fixinfo.type_aux,fb_fixinfo.line_length,fb_fixinfo.accel);
+//#endif
 
   fflush(stdout);
   if (vt_num!=-1)
@@ -188,16 +188,16 @@ int read_fb(char *device, int vt_num, struct picture *pict){
 
   j= (read(fd, pict->buffer, ((pict->xres * pict->yres) * i) )!=
   	(pict->xres * pict->yres *i ));
-#ifdef DEBUG
-  printf("to read:%i read:%i\n",(pict->xres* pict->yres * i), j);
-#endif
+//#ifdef DEBUG
+//  printf("to read:%i read:%i\n",(pict->xres* pict->yres * i), j);
+//#endif
   if (vt_num!=-1)
     chvt(vt_old);
 
-  if(j)
-    FatalError("couldn't read the framebuffer");
-  else
-    fprintf(stdout,"done.\n");
+//  if(j)
+//    FatalError("couldn't read the framebuffer");
+//  else
+//    fprintf(stdout,"done.\n");
   close (fd);
   return 0;
 }
@@ -236,7 +236,7 @@ void convert1555to32(struct picture *pict){
   pict->buffer=out;
 }
 
-void convert565to32(struct picture *pict){
+void convert565to32(struct picture *pict){ // ARGB_8888
   int i;
   int j=0;
   __u16 t,c;
@@ -244,10 +244,11 @@ void convert565to32(struct picture *pict){
   for (i=0; i<pict->xres*pict->yres; i++)
   {
     c = ( (__u16*)(pict->buffer))[i];
+    out[j++]=(char)0xff;
     out[j++]=(char)RED565(c);
     out[j++]=(char)GREEN565(c);
     out[j++]=(char)BLUE565(c);
-    out[j++]=(char)0xff;
+
   }
   free(pict->buffer);
   pict->buffer=out;
