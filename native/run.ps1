@@ -37,8 +37,11 @@ try
 			
 			# Get PID of the service's process
 			"Terminating service..." | Out-Host
-			$ps = $ps.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)
-			& $adb shell kill -9 $ps[1]
+			for ($i = 0; $i -lt $ps.Length; ++$i)
+			{
+				$psLine = $ps[$i].ToString().Split(" ", [StringSplitOptions]::RemoveEmptyEntries)
+				& $adb shell kill -9 $psLine[1]
+			}
 			"Service terminated." | Out-Host
 		}
 		

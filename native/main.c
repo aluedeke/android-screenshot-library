@@ -159,6 +159,17 @@ int accept_client(int servfd, int** client_fd, int* client_count)
 	if (cfd < 0)	return -1;
 	Log ("- Connection accepted");
 
+	/* check whether the client comes from local system; detach if not */
+	struct sockaddr_in client_addr;
+	socklen_t ca_len = sizeof(struct sockaddr_in);
+	if (getpeername(cfd, (struct sockaddr*)&client_addr, &ca_len) < 0)	return -1;
+	if (strcmp(inet_ntoa(client_addr.sin_addr), "127.0.0.1") != 0) {
+		Log ("- Remote client detected -- closing connection.");
+		shutdown (cfd, SHUT_RDWR);
+		close (cfd);
+		return 0;
+	}
+
 	*client_fd = (int*)realloc(*client_fd, sizeof(int) * (*client_count + 1));
 	(*client_fd)[(*client_count)++] = cfd;	// (*client_fd)[...] != *client_fd[...] -- f'kin precedence ;/
 
@@ -191,6 +202,7 @@ int handle_client_input(int cfd, char* fddev)
 		snprintf (buf, BUF_SIZE, "%d %d %d", pict.xres, pict.yres, pict.bps);
 		if (Send(cfd, buf, (strlen(buf) + 1) * sizeof(char), 0) < 0)	/* incl. \0 */
 			return -1;
+		Log (buf);
 		Log ("- Response header sent.");
 
 		/* content */
@@ -299,7 +311,6 @@ int main(int argc, char* argv [])
 		Log ("Error while setting up signals");
 
 	Log ("Going into background -- have nice day.");
-	kill (getppid(), SIGKILL);
 	if (setsid () < 0)	Log("Error while going into background");
 	if (do_work (server_socket, device) < 0)
 		Log ("Error in main loop");

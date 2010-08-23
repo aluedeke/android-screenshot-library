@@ -1,6 +1,6 @@
 package pl.polidea.asl.demo;
 
-import pl.polidea.asl.service.*;
+import pl.polidea.asl.*;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -47,7 +47,8 @@ public class ScreenshotDemo extends Activity {
 
         // connect to ASL service
         //Intent intent = new Intent(ScreenshotService.class.getName());
-        Intent intent = new Intent(ScreenshotService.BIND);
+        Intent intent = new Intent();
+        intent.setClass(this, ScreenshotService.class);
         //intent.addCategory(Intent.ACTION_DEFAULT);
         bindService (intent, aslServiceConn, Context.BIND_AUTO_CREATE);
     }

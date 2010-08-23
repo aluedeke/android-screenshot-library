@@ -13,14 +13,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name="pl.polidea.asl.service.ScreenshotService" android:label="Service for accessing the Android Screenshot Library API"
-		android:enabled="true" android:exported="true">
+        <service android:name="pl.polidea.asl.ScreenshotService">
 			<intent-filter>
-				<action android:name="pl.polidea.asl.service.ScreenshotService.BIND" />
+				<action android:name="pl.polidea.asl.ScreenshotService.BIND" />
 				<category android:name="android.intent.category.DEFAULT"/>
 			</intent-filter>
 		</service>
 </application>
 
 
-</manifest> 
+</manifest>
