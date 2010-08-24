@@ -116,38 +116,6 @@ public class ScreenshotService extends Service {
 	
 	
 	/*
-	 * Internal class encapsulating Android's version.
-	 */
-	class Version {
-		public int major;
-		public int minor;
-		
-		public Version() {
-			String[] v = Build.VERSION.RELEASE.split(".");
-			
-			// throw out the possible "rc#" part after minor version
-			int i;
-			for (i = 0; i < v[1].length(); ++i) {
-				if ((v[1].charAt(i) >= '0' && v[1].charAt(i) <= '9') || v[1].charAt(i) == '.')
-					continue;
-			}
-			v[1] = v[1].substring(0, i);
-			
-			major = Integer.parseInt(v[0]);
-			minor = Integer.parseInt(v[1]);
-		}
-		
-		public Version(int major, int minor) {
-			this.major = major;
-			this.minor = minor;
-		}
-		
-		public boolean isAtLeast(Version v) {
-			return (major > v.major || (major == v.major && minor == v.minor));
-		}
-	}
-	
-	/*
 	 * Determines whether the phone's screen is rotated.
 	 */
 	private int getScreenRotation()  {
@@ -284,6 +252,10 @@ public class ScreenshotService extends Service {
 	 * Takes screenshot and saves to a file.
 	 */
 	private String takeScreenshot() throws IOException {
+		// make sure the path to save screens exists
+		File screensPath = new File(SCREENSHOT_FOLDER);
+		screensPath.mkdirs();
+			
 		// construct screenshot file name
 		StringBuilder sb = new StringBuilder();
 		sb.append(SCREENSHOT_FOLDER);

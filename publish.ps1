@@ -14,7 +14,7 @@ Copy-Item demo/src/pl/polidea/asl/IScreenshotProvider.aidl dist/
 Copy-Item demo/src/pl/polidea/asl/ScreenshotService.java dist/
 
 # Copy service launch scripts
-Copy-Item native/run.* dist/
+Copy-Item desktop/run.* dist/
 
 # Copy demo application
 Copy-Item demo dist/demo -Recurse

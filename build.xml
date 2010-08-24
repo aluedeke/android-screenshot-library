@@ -1,6 +1,31 @@
 <?xml version="1.0"?>
 <project name="android-screenshot-library" default="build">
-	<target name="build"/>
+	<target name="build">
+			<ant antfile="demo/build.xml"></ant>
+			<ant antfile="native/build.xml"></ant>
+	</target>
 	<target name="analysis"/>
 	<target name="javadoc"/>
+	
+	<!-- Preparing the release package -->
+	<target name="publish" depends="build">
+		<!-- Create directory for package -->
+		<delete dir="dist" failonerror="false" />
+		<mkdir dir="dist"/>
+		
+		<!-- Copy native application -->
+		<copyfile src="native/asl-native" dest="dist/"/>
+		
+		<!-- Copy source files -->
+		<copyfile src="demo/src/pl/polidea/asl/IScreenshotProvider.aidl" dest="dist/"/>
+		<copyfile src="demo/src/pl/polidea/asl/ScreenshotService.java" dest="dist/"/>
+		
+		<!-- Copy service launch scripts -->
+		<copy src="desktop/run.*" dest="dist/"/>
+		
+		<!-- Copy demo application -->
+		<copydir src="demo" dest="dist/demo"/>
+		<delete dir="dist/demo/bin"/>
+		<delete dir="dist/demo/gen"/>
+	</target>
 </project>
