@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <project name="android-screenshot-library" default="build">
 	<target name="build">
-			<ant antfile="demo/build.xml"></ant>
-			<ant antfile="native/build.xml"></ant>
+			<ant antfile="demo/build.xml" dir="demo" target="build"></ant>
+			<ant antfile="native/build.xml" dir="native" target="build"></ant>
 	</target>
 	<target name="analysis"/>
 	<target name="javadoc"/>
