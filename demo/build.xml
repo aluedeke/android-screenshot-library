@@ -52,7 +52,7 @@
     </target>
 
     <target name="build" description="Build apk" depends="release">
-        <copy file="${release.apk.file}" tofile="${apk.file}"/>
+        <copy file="${release.apk.file}" tofile="${apk.file}" failonerror="false"/>
     </target>
     
     <!--ANALYSIS-->
