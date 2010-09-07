@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Resources.NotFoundException;
 import android.os.*;
 import android.view.*;
 import android.widget.*;
@@ -64,23 +65,27 @@ public class ScreenshotDemo extends Activity {
 
 		@Override
 		public void onClick(View v) {
-			if (aslProvider == null)
-				Toast.makeText(ScreenshotDemo.this, R.string.n_a, Toast.LENGTH_SHORT).show();
-			else {
-				String file = null;
-				try {
-					file = aslProvider.takeScreenshot();
-				} catch (RemoteException e) {
-					// squelch
-				}
-				if (file == null)
-					Toast.makeText(ScreenshotDemo.this, R.string.screenshot_error, Toast.LENGTH_SHORT).show();
+			try {
+				if (aslProvider == null)
+					Toast.makeText(ScreenshotDemo.this, R.string.n_a, Toast.LENGTH_SHORT).show();
+				else if (!aslProvider.isAvailable())
+					Toast.makeText(ScreenshotDemo.this, R.string.native_n_a, Toast.LENGTH_SHORT).show();
 				else {
-					Toast.makeText(ScreenshotDemo.this, R.string.screenshot_ok, Toast.LENGTH_SHORT).show();
-					Bitmap screen = BitmapFactory.decodeFile(file);
-					imgScreen.setImageBitmap(screen);
-					
+					String file = aslProvider.takeScreenshot();
+					if (file == null)
+						Toast.makeText(ScreenshotDemo.this, R.string.screenshot_error, Toast.LENGTH_SHORT).show();
+					else {
+						Toast.makeText(ScreenshotDemo.this, R.string.screenshot_ok, Toast.LENGTH_SHORT).show();
+						Bitmap screen = BitmapFactory.decodeFile(file);
+						imgScreen.setImageBitmap(screen);
+						
+					}
 				}
+			} catch (NotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (RemoteException e) {
+				// squelch
 			}
 
 		}

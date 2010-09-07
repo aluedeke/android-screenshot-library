@@ -83,18 +83,26 @@ public class ScreenshotService extends Service {
 	 * Checks whether the internal native application is running,
 	 */
 	private boolean isNativeRunning() {
-		ActivityManager am = (ActivityManager)getSystemService(Service.ACTIVITY_SERVICE);
-		List<ActivityManager.RunningAppProcessInfo> ps = am.getRunningAppProcesses();
-
-		if (am != null) {
-			for (ActivityManager.RunningAppProcessInfo rapi : ps) {
-				if (rapi.processName.contains(NATIVE_PROCESS_NAME))
-					// native application found
-					return true;
-			}
-
+		try {
+			Socket sock = new Socket();
+			sock.connect(new InetSocketAddress("localhost", PORT), 10);	// short timeout
 		}
-		return false;
+		catch (Exception e) {
+			return false;
+		}
+		return true;
+//		ActivityManager am = (ActivityManager)getSystemService(Service.ACTIVITY_SERVICE);
+//		List<ActivityManager.RunningAppProcessInfo> ps = am.getRunningAppProcesses();
+//
+//		if (am != null) {
+//			for (ActivityManager.RunningAppProcessInfo rapi : ps) {
+//				if (rapi.processName.contains(NATIVE_PROCESS_NAME))
+//					// native application found
+//					return true;
+//			}
+//
+//		}
+//		return false;
 	}
 	
 	
