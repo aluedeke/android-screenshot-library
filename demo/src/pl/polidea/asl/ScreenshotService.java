@@ -233,9 +233,17 @@ public class ScreenshotService extends Service {
 	private void writeImageFile(Screenshot ss, String file) {
 		if (ss == null || !ss.isValid())		throw new IllegalArgumentException();
 		if (file == null || file.length() == 0)	throw new IllegalArgumentException();
+		
+		// resolve screenshot's BPP to actual bitmap pixel format
+		Bitmap.Config pf;
+		switch (ss.bpp) {
+			case 16:	pf = Config.RGB_565; break;
+			case 32:	pf = Config.ARGB_8888; break;
+			default:	pf = Config.ARGB_8888; break;
+		}
 
 		// create appropriate bitmap and fill it wit data
-		Bitmap bmp = Bitmap.createBitmap(ss.width, ss.height, Config.ARGB_8888);
+		Bitmap bmp = Bitmap.createBitmap(ss.width, ss.height, pf);
 		bmp.copyPixelsFromBuffer(ss.pixels);
 		
 		// handle the screen rotation
