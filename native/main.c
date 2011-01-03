@@ -40,7 +40,7 @@ inline void Log(const char* msg)
 
 
 volatile sig_atomic_t end = 0;
-void sig_INT(int sig)	{ fprintf(logFile, "------ Caught signal %d -----\n", sig); if (sig == SIGINT) end = 1; }
+void sig_INT(int sig)	{ fprintf(logFile, "------ Caught signal %d -----\n", sig); if (sig == SIGINT || sig == SIGSEGV) end = 1; }
 
 
 ssize_t Receive(int sfd, char* buf, size_t count, int flags)
@@ -310,8 +310,8 @@ int main(int argc, char* argv [])
 	if (setup_signals() < 0)
 		Log ("Error while setting up signals");
 
-	Log ("Going into background -- have nice day.");
-	if (setsid () < 0)	Log("Error while going into background");
+//	Log ("Going into background -- have nice day.");
+//	if (setsid () < 0)	Log("Error while going into background");
 	if (do_work (server_socket, device) < 0)
 		Log ("Error in main loop");
 }

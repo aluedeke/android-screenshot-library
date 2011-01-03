@@ -10,7 +10,7 @@ if [ -z $ANDROID ]; then
 	echo "*** Android SDK not found ***"
 	echo "Make sure the ANDROID variable is pointing to Android SDK root directory"
 else
-	adb="$ANDROID/tools/adb"
+	adb="$ANDROID/platform-tools/adb"
 	
 	# Check whether device is connected or wait for one
 	adbState=`$adb get-state`

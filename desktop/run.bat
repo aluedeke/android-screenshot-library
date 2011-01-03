@@ -5,16 +5,16 @@ echo Android Screenshot Library -- Initializing...
 if not defined ANDROID goto SdkPathNotDefined
 
 echo Waiting for device to be connected...
-%ANDROID%\tools\adb.exe wait-for-device
+%ANDROID%\platform-tools\adb.exe wait-for-device
 
 echo - Installing native service...
-%ANDROID%\tools\adb.exe push ./asl-native /data/local/asl-native
-%ANDROID%\tools\adb.exe shell /system/bin/chmod 0777 /data/local/asl-native
+%ANDROID%\platform-tools\adb.exe push ./asl-native /data/local/asl-native
+%ANDROID%\platform-tools\adb.exe shell /system/bin/chmod 0777 /data/local/asl-native
 
 echo Starting...
 
-%ANDROID%\tools\adb.exe shell kill -9 "/data/local/asl-native"
-start /B %ANDROID%\tools\adb.exe shell "/data/local/asl-native /data/local/asl-native.log"
+%ANDROID%\platform-tools\adb.exe shell kill -9 "/data/local/asl-native"
+start /B %ANDROID%\platform-tools\adb.exe shell "/data/local/asl-native /data/local/asl-native.log"
 
 echo Service started successfully.
 

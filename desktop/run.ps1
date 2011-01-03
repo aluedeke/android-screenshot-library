@@ -13,7 +13,7 @@ try
 	}
 	else
 	{
-		$adb = [IO.Path]::Combine([IO.Path]::Combine($Env:ANDROID, "tools"), "adb.exe")
+		$adb = [IO.Path]::Combine([IO.Path]::Combine($Env:ANDROID, "platform-tools"), "adb.exe")
 		
 		# Check whether device is connected and wait for one
 		$adbState = (& $adb get-state)

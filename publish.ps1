@@ -4,7 +4,7 @@
 
 # Create directory for package
 Remove-Item dist -Recurse -ErrorAction SilentlyContinue
-New-Item dist -ItemType Directory | Out-Null
+New-Item dist -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
 
 # Copy native application
 Copy-Item native/asl-native dist/

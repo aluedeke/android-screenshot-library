@@ -112,6 +112,46 @@ void chvt(int num){
     sleep (3);
 }
 
+unsigned int create_bitmask(struct fb_bitfield* bf) {
+
+	return ~(~0u << bf->length) << bf->offset;
+}
+
+// Unifies the picture's pixel format to be 32-bit ARGB
+void unify(struct picture *pict, struct fb_var_screeninfo *fb_varinfo) {
+
+	__u32 red_mask, green_mask, blue_mask;
+	__u32 c;
+	__u32 r, g, b;
+	__u32* out;
+	int i, j = 0, bytes_pp;
+
+	// build masks for extracting colour bits
+	red_mask = create_bitmask(&fb_varinfo->red);
+	green_mask = create_bitmask(&fb_varinfo->green);
+	blue_mask = create_bitmask(&fb_varinfo->blue);
+
+	// go through the image and put the bits in place
+	out = (__u32*)malloc(pict->xres * pict->yres * sizeof(__u32));
+	bytes_pp = pict->bps >> 3;
+	for (i = 0; i < pict->xres * pict->yres * bytes_pp; i += bytes_pp) {
+
+		memcpy (((char*)&c) + (sizeof(__u32) - bytes_pp), pict->buffer + i, bytes_pp);
+
+		// get the colors
+		r = ((c & red_mask) >> fb_varinfo->red.offset) & ~(~0u << fb_varinfo->red.length);
+		g = ((c & green_mask) >> fb_varinfo->green.offset) & ~(~0u << fb_varinfo->green.length);
+		b = ((c & blue_mask) >> fb_varinfo->blue.offset) & ~(~0u << fb_varinfo->blue.length);
+
+		// format the new pixel
+		out[j++] = (0xFF << 24) | (b << 16) | (g << 8) | r;
+	}
+
+	pict->buffer = (char*)out;
+	pict->bps = 32;
+}
+
+
 int read_fb(char *device, int vt_num, struct picture *pict){
   int fd, vt_old, i,j;
   struct fb_fix_screeninfo fb_fixinfo;
@@ -169,7 +209,7 @@ int read_fb(char *device, int vt_num, struct picture *pict){
 //  fprintf(stdout, "Framebuffer %s is %i bytes.\n", device,
 //                    (fb_varinfo.xres * fb_varinfo.yres * i));
 //  fprintf(stdout, "Grabbing %ix%i ... \n", fb_varinfo.xres, fb_varinfo.yres);
-
+//
 //#ifdef DEBUG
 ///* Output some more information bout actual graphics mode
 // */
@@ -177,7 +217,7 @@ int read_fb(char *device, int vt_num, struct picture *pict){
 //  	fb_varinfo.xres_virtual, fb_varinfo.yres_virtual,
 //  	fb_varinfo.xoffset, fb_varinfo.yoffset,
 //  	fb_varinfo.bits_per_pixel, fb_varinfo.grayscale);
-//  fprintf(stdout, "FIX: card:%s mem:0x%.8X mem_len:%d visual:%i type:%i type_aux:%i line_len:%i accel:%i\n",
+//    fprintf(stdout, "FIX: card:%s mem:0x%.8X mem_len:%d visual:%i type:%i type_aux:%i line_len:%i accel:%i\n",
 //  fb_fixinfo.id,fb_fixinfo.smem_start,fb_fixinfo.smem_len,fb_fixinfo.visual,
 //  fb_fixinfo.type,fb_fixinfo.type_aux,fb_fixinfo.line_length,fb_fixinfo.accel);
 //#endif
@@ -199,8 +239,11 @@ int read_fb(char *device, int vt_num, struct picture *pict){
 //  else
 //    fprintf(stdout,"done.\n");
   close (fd);
+
+  unify(pict, &fb_varinfo);
   return 0;
 }
+
 
 void convert8to32(struct picture *pict){
   int i;
