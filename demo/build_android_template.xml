@@ -8,11 +8,11 @@
     <import file="${sdk.dir}/tools/ant/main_rules.xml" />
     -->
 
-    <property file="project.properties" />
-    <property file="local.properties" />
-    <property file="server.properties" />
-    <property file="build.properties" />
-    <property file="default.properties" />
+    <property file="${basedir}/project.properties" />
+    <property file="${basedir}/local.properties" />
+    <property file="${basedir}/server.properties" />
+    <property file="${basedir}/build.properties" />
+    <property file="${basedir}/default.properties" />
     <property name="bin.dir" location="bin" />
     <property name="unsigned.apk.file" location="${bin.dir}/${project.apk.name}-unsigned.apk" />
     <property name="signed.apk.file" location="${bin.dir}/${project.apk.name}-signed.apk" />
