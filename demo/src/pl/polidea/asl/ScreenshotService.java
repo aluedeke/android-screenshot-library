@@ -1,25 +1,33 @@
 package pl.polidea.asl;
 
-import java.io.*;
-import java.lang.reflect.InvocationTargetException;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.net.*;
-import java.nio.*;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
-import java.util.List;
 import java.util.UUID;
 
 import android.app.Service;
-import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Bitmap.Config;
 import android.graphics.Matrix;
-import android.os.*;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
-import android.view.*;
+import android.view.Display;
+import android.view.Surface;
+import android.view.WindowManager;
 
 public class ScreenshotService extends Service {
 	
@@ -46,7 +54,7 @@ public class ScreenshotService extends Service {
 	/*
 	 * Directory where screenshots are being saved.
 	 */
-	private static String SCREENSHOT_FOLDER = "/sdcard/screens/";
+	private static final String SCREENSHOT_FOLDER = "/sdcard/screens/";
 
 
 	/*
@@ -109,7 +117,7 @@ public class ScreenshotService extends Service {
 	/*
 	 * Internal class describing a screenshot.
 	 */
-	class Screenshot {
+	static final class Screenshot {
 		public Buffer pixels;
 		public int width;
 		public int height;
@@ -144,7 +152,7 @@ public class ScreenshotService extends Service {
 					default:					return 0;
 				}
 		} catch (NoSuchMethodException e) {
-			// no getRotation() method -- fall back to dispation()
+			// no getRotation() method -- fall back to getOrientation()
 			int orientation = disp.getOrientation();
 
 			// Sometimes you may get undefined orientation Value is 0
@@ -270,12 +278,12 @@ public class ScreenshotService extends Service {
 	private String takeScreenshot() throws IOException {
 		// make sure the path to save screens exists
 		File screensPath = new File(SCREENSHOT_FOLDER);
-		screensPath.mkdirs();
+		if (!screensPath.mkdirs())	return null;
 			
 		// construct screenshot file name
 		StringBuilder sb = new StringBuilder();
 		sb.append(SCREENSHOT_FOLDER);
-		sb.append(Math.abs(UUID.randomUUID().hashCode()));	// hash code of UUID should be quite random yet short
+		sb.append(Integer.toHexString(UUID.randomUUID().hashCode()));	// hash code of UUID should be quite random yet short
 		sb.append(".png");
 		String file = sb.toString();
 
@@ -286,6 +294,7 @@ public class ScreenshotService extends Service {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 		writeImageFile(ss, file);
 

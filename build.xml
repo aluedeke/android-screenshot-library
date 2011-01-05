@@ -4,8 +4,6 @@
 			<ant dir="demo" target="build"></ant>
 			<ant dir="native" target="build"></ant>
 	</target>
-	<target name="analysis"/>
-	<target name="javadoc"/>
 	
 	<!-- Preparing the release package -->
 	<target name="publish" depends="build">
@@ -14,14 +12,16 @@
 		<mkdir dir="dist"/>
 		
 		<!-- Copy native application -->
-		<copyfile src="native/asl-native" dest="dist/"/>
+		<copy file="native/asl-native" todir="dist/"/>
 		
 		<!-- Copy source files -->
-		<copyfile src="demo/src/pl/polidea/asl/IScreenshotProvider.aidl" dest="dist/"/>
-		<copyfile src="demo/src/pl/polidea/asl/ScreenshotService.java" dest="dist/"/>
+		<copy file="demo/src/pl/polidea/asl/IScreenshotProvider.aidl" todir="dist/"/>
+		<copy file="demo/src/pl/polidea/asl/ScreenshotService.java" todir="dist/"/>
 		
 		<!-- Copy service launch scripts -->
-		<copy src="desktop/run.*" dest="dist/"/>
+		<copy file="desktop/run.ps1" todir="dist/"/>
+		<copy file="desktop/run.bat" todir="dist/"/>
+		<copy file="desktop/run.sh" todir="dist/"/>
 		
 		<!-- Copy demo application -->
 		<copydir src="demo" dest="dist/demo"/>

@@ -7,12 +7,30 @@
 	<property name="L_FLAGS" value="--static"/>
 	
 	<target name="compile">
-		<exec command="${ARM_GCC} -c ${C_FLAGS} fbshot.c -o fbshot.o"/>
-		<exec command="${ARM_GCC} -c ${C_FLAGS} main.c -o main.o"/>
+		<exec executable="${ARM_GCC}">
+		  <arg value="-c"/>
+		  <arg value="${C_FLAGS}"/>
+		  <arg value="fbshot.c"/>
+		  <arg value="-o"/>
+		  <arg value="fbshot.o"/>
+		</exec>
+		<exec executable="${ARM_GCC}">
+			<arg value="-c" />
+			<arg value="${C_FLAGS}"/>
+			<arg value="main.c"/>
+			<arg value="-o"/>
+			<arg value="main.o"/>
+		</exec>
 	</target>
 	
 	<target name="build" depends="compile">
-		<exec command="${ARM_GCC} ${L_FLAGS} fbshot.o main.o -o asl-native"/>
+		<exec executable="${ARM_GCC}">
+			<arg value="${L_FLAGS}"/>
+			<arg value="fbshot.o"/>
+			<arg value="main.o"/>
+			<arg value="-o"/>
+			<arg value="asl-native"/>
+		</exec>
 	</target>
 	
 	<target name="clean">
