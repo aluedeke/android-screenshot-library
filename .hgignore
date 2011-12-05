@@ -1,5 +1,6 @@
 
 syntax: regexp
 ^native/local\.properties$
+^demo/local\.properties$
 ^demo/gen$
 ^demo/bin$
