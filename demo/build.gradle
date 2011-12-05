@@ -1,11 +1,24 @@
 buildscript {
-    def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
     repositories {
-        org.apache.ivy.util.url.CredentialsStore.INSTANCE.addCredentials(
-            "Artifactory Realm", "dev.polidea.pl", "${polideaRepoUsername}", "${polideaRepoPassword}")
-        mavenRepo url: localMavenRepo
-        mavenRepo url: uri('https://dev.polidea.pl/artifactory/plugins-snapshot-local')
-        mavenRepo url: uri('https://dev.polidea.pl/artifactory/plugins-release-local')
+        maven {
+             url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+        }
+        maven {
+           name 'Polidea plugin snapshot repository'
+           credentials {
+             username = polideaRepoUsername
+             password = polideaRepoPassword
+           }
+           url 'https://dev.polidea.pl/artifactory/plugins-snapshot-local'
+        }
+        maven {
+           name 'Polidea plugin release repository'
+           credentials {
+             username = polideaRepoUsername
+             password = polideaRepoPassword
+           }
+           url 'https://dev.polidea.pl/artifactory/plugins-release-local'
+        }
         mavenCentral()
     }
     dependencies {
@@ -13,11 +26,15 @@ buildscript {
             changing = true
         }
     }
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
 }
 
 apply plugin: 'polidea-project-configuration'
 apply plugin: 'polidea-mercurial'
 apply plugin: 'polidea-android-build'
+//apply plugin: 'polidea-android-apphance'
 apply plugin: 'polidea-android-analysis'
-apply plugin: 'polidea-android-apphance'
-apply plugin: 'polidea-android-reports'
+//apply plugin: 'polidea-android-test'
+//apply plugin: 'polidea-android-reports'
