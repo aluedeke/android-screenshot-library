@@ -2,5 +2,7 @@
 syntax: regexp
 ^native/local\.properties$
 ^demo/local\.properties$
+^demo/\.gradle$
 ^demo/gen$
 ^demo/bin$
+^demo/log$
